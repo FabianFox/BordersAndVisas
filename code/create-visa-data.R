@@ -140,18 +140,18 @@ visa.df[visa.df$destination_iso3 == "SRB" &
 # Transform into  a network format
 ### ------------------------------------------------------------------------###
 # Create an igraph graph from data frame
-visa_2020.graph <- graph_from_data_frame(visa_2020.df[,c("destination_iso3",
-                                                         "nationality_iso3",
-                                                         "visa_requirement_binary")], 
+visa_2020.graph <- graph_from_data_frame(visa.df[,c("destination_iso3",
+                                                    "nationality_iso3",
+                                                    "visa_requirement_binary")],
                                          directed = TRUE)
 
 # Transform into  a network format
 # Create an igraph graph from data frame
-visa_2020.graph <- graph_from_data_frame(visa_2020.df[,c(1,2,6)], directed = TRUE)
+visa_2020.graph <- graph_from_data_frame(visa.df[,c(1,2,6)], directed = TRUE)
 
 # Transform into a matrix
 visa_2020.mat <- get.adjacency(visa_2020.graph, sparse = FALSE, 
-                          attr = "visa_requirement_binary") 
+                               attr = "visa_requirement_binary") 
 
 # Visa Network Data
 ## -------------------------------------------------------------------------- ##
@@ -163,9 +163,9 @@ visa_2020.mat <- get.adjacency(visa_2020.graph, sparse = FALSE,
 
 # (1) Load data
 visa_2010.df <- read_xls(path = "./data/Visa Network Data_1969_2010.xls",
-                 sheet = 2, range = "C5:FN172", 
-                 col_types = c("text", rep("numeric", 167)), 
-                 na = "/")
+                         sheet = 2, range = "C5:FN172", 
+                         col_types = c("text", rep("numeric", 167)), 
+                         na = "/")
 
 # (2) Prepare data
 # Delete unnecessary rows and columns
@@ -250,4 +250,6 @@ visa.df <- tibble(
               visa_2020.mat)
   )
 
-# export(visa.df, "C:/Users/guelzauf/Desktop/VisaNetworkData_Longitudinal.RDS")
+# Export
+## -------------------------------------------------------------------------- ##
+export(visa.df, "./VisaNetworkData.RDS")
