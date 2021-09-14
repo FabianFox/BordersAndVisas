@@ -101,7 +101,8 @@ fence.df <- fence.df %>%
 fence.fig <- ggplot(fence.df) +
   geom_bar(aes(x = year, y = n), stat = "identity") +
   geom_point(aes(x = year, y = n_cumsum), stat = "identity", size = 2) +
-  geom_line(aes(x = year, y = n_cumsum, group = 1), size = 0.75, stat = "identity") +
+  geom_line(aes(x = year, y = n_cumsum, group = 1), size = 0.75, stat = "identity", 
+            linetype = "dashed") +
   scale_y_continuous(limits = c(0, 60)) +
   labs(x = "", y = "") +
   theme.basic +
