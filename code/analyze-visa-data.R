@@ -21,9 +21,6 @@ visa.df <- import("./data/VisaNetworkData.RDS")
 # use country-list of 2010 to standardize 2020
 cntry2010 <- colnames(visa.df$data[[2]])
 
-# Subset
-visa.df <- visa.df
-
 # Standardize
 visa.df$data[[3]] <- visa.df$data[[3]][
   rownames(visa.df$data[[3]]) %in% cntry2010, 
@@ -45,7 +42,7 @@ visa.df <- visa.df %>%
 
 # Unnest 
 ### ------------------------------------------------------------------------###
-visa.stats.df <- visa.std.df %>%
+visa.stats.df <- visa.df %>%
   select(-data, -network_data) %>%
   mutate(country = map(sent_waivers, ~names(.x))) %>%
   unnest(cols = c(year, sent_waivers, received_waivers, stats, country)) %>%
@@ -87,16 +84,30 @@ visa.stats.df <- visa.stats.df %>%
                  labs(x = "", y = "", title = paste(.y)) +
                  theme_minimal() +
                  theme(
-                   axis.title.x = element_blank()
+                   axis.title.x = element_blank(),
+                   axis.text.x = element_text(angle = 45, hjust = 1)
                  )),
          lineplot = 
            map2(.x = plot_data, .y = year, ~ggplot(.x) +
                  geom_line(aes(x = interval, y = cum_sum, group = 1)) +
+                 geom_area(aes(x = interval, y = cum_sum, group = 1), 
+                           fill = "#252525", alpha = 0.4) +
                  scale_x_discrete(drop = FALSE) +
                  scale_y_continuous(labels = function(x) paste0(x * 100, "%")) +
                  labs(x = "", y = "", title = paste(.y)) +
-                 theme_minimal()
+                 theme_minimal() +
+                 theme(axis.text.x = element_text(angle = 45, hjust = 1))
                  ))
+
+# Use patchwork to arrange plots
+# Note: pipe-friendly patchwork (see: https://community.rstudio.com/t/nested-dataframe-ggplot-and-patchwork/22189)
+### ------------------------------------------------------------------------###
+visa.stats.df %>%
+  select("barplot", "lineplot", "year") %>%
+  pivot_longer(c("barplot", "lineplot"), names_to = "type", values_to = "plot") %>%
+  arrange(type, year) %>%
+  pull(plot) %>%
+  reduce(`%+%`)
 
 # Save
 ### ------------------------------------------------------------------------###
