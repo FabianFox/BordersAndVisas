@@ -7,7 +7,7 @@
 # https://www.fiw.uni-bonn.de/demokratieforschung/personen/laube/visanetworkdata
 
 # Load/install packages
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 if (!require("xfun")) install.packages("xfun")
 pkg_attach2("tidyverse", "rio", "countrycode", "patchwork", "grid", "statnet")
 
@@ -17,7 +17,7 @@ visa.df <- import("./data/VisaNetworkData.RDS")
 
 # Standardized sample 
 # i.e. constant Ncountry, reference: 2010
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 # use country-list of 2010 to standardize 2020
 cntry2010 <- colnames(visa.df$data[[2]])
 
@@ -28,7 +28,7 @@ visa.df$data[[3]] <- visa.df$data[[3]][
   ]
 
 # Create in- and outdegree
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 # Notes: 
 # - Check treatment of NA
 # - in- and outdegree computation could also be done with the network module
@@ -41,7 +41,7 @@ visa.df <- visa.df %>%
            degree = mean(sna::degree(.x, cmode = "indegree"))))) # equal mean outdegree
 
 # Unnest 
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 visa.stats.df <- visa.df %>%
   select(-data, -network_data) %>%
   mutate(country = map(sent_waivers, ~names(.x))) %>%
@@ -49,7 +49,7 @@ visa.stats.df <- visa.df %>%
   nest(data = c(sent_waivers, received_waivers, country))
 
 # Descriptive statistics
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 visa.stats.df <- visa.stats.df %>%
   mutate(top_10 = map(data, ~.x %>%
                         slice_max(received_waivers, n = 10)), # with_ties 
@@ -57,7 +57,7 @@ visa.stats.df <- visa.stats.df %>%
                            slice_min(received_waivers, n = 10))) # with_ties
 
 # Create variables for plotting
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 visa.stats.df <- visa.stats.df %>%
   mutate(plot_data = map(data, ~.x %>%
                            mutate(
@@ -74,7 +74,7 @@ visa.stats.df <- visa.stats.df %>%
            ))
 
 # Plot
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 visa.stats.df <- visa.stats.df %>%
   mutate(barplot = 
            map2(.x = plot_data, .y = year, ~ggplot(.x) +
@@ -100,7 +100,7 @@ visa.stats.df <- visa.stats.df %>%
                  ))
 
 # Use patchwork to arrange plots
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 plot.df <- visa.stats.df %>%
   select("barplot", "lineplot", "year") %>%
   pivot_longer(c("barplot", "lineplot"), names_to = "type", values_to = "plot") %>%
@@ -108,12 +108,12 @@ plot.df <- visa.stats.df %>%
   pull(plot) 
 
 # Wrap plots
-visa.hist.fig <- wrap_plots(plot.df, ncol = 3, nrow = 2, heights = c(3, 1))
+visa.histogram.fig <- wrap_plots(plot.df, ncol = 3, nrow = 2, heights = c(3, 1))
 
-# Save
-### ------------------------------------------------------------------------###
-visa.stats.df %>%
-  map2(.x = .$barplot, .y = .$year, .f = ~ggsave(
-    plot = .x, filename = paste0("O:/Grenzen der Welt/Tagungen & Konferenzen/DGS-Kongress 2020/SFB@DGS/figures/VisaWaivers_", .y, ".tiff"),
-    width = 11, height = 8, unit = "in",
-    dpi = 300))
+# Export
+### ------------------------------------------------------------------------ ###
+ggsave(
+  plot = visa.histogram.fig, "./figures/histogram-visa.tiff", 
+  width = 16, height = 10, unit = "in",
+  dpi = 300
+)
