@@ -100,14 +100,15 @@ visa.stats.df <- visa.stats.df %>%
                  ))
 
 # Use patchwork to arrange plots
-# Note: pipe-friendly patchwork (see: https://community.rstudio.com/t/nested-dataframe-ggplot-and-patchwork/22189)
 ### ------------------------------------------------------------------------###
-visa.stats.df %>%
+plot.df <- visa.stats.df %>%
   select("barplot", "lineplot", "year") %>%
   pivot_longer(c("barplot", "lineplot"), names_to = "type", values_to = "plot") %>%
   arrange(type, year) %>%
-  pull(plot) %>%
-  reduce(`%+%`)
+  pull(plot) 
+
+# Wrap plots
+visa.hist.fig <- wrap_plots(plot.df, ncol = 3, nrow = 2, heights = c(3, 1))
 
 # Save
 ### ------------------------------------------------------------------------###
