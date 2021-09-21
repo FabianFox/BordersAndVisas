@@ -56,6 +56,16 @@ visa.stats.df <- visa.stats.df %>%
          bottom_10 = map(data, ~.x %>%
                            slice_min(received_waivers, n = 10))) # with_ties
 
+# Add region identifier (from World Bank Indicators)
+### ------------------------------------------------------------------------ ###
+visa.stats.df <- visa.stats.df %>%
+  mutate(data = map(data, ~.x %>%
+                      mutate(
+                        region = countrycode(
+                          country, "iso3c", "region",
+                          custom_match = c("MKD" = "Europe & Central Asia",
+                                           "DDR" = "Europe & Central Asia")))))
+
 # Create variables for plotting
 ### ------------------------------------------------------------------------ ###
 visa.stats.df <- visa.stats.df %>%
