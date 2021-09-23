@@ -103,6 +103,9 @@ fence.fig <- ggplot(fence.df) +
   geom_point(aes(x = year, y = n_cumsum), stat = "identity", size = 2) +
   geom_line(aes(x = year, y = n_cumsum, group = 1), size = 0.75, stat = "identity", 
             linetype = "dashed") +
+  annotate("text", x = 12, y = 45, label = "Cumulative number of\nborder fences",
+           hjust = 0, vjust = 0.5, size = 5) +
+  annotate("segment", x = 14.2, xend = 15.7, y = 44, yend = 40) +
   scale_y_continuous(limits = c(0, 60)) +
   labs(x = "", y = "") +
   theme.basic +
@@ -110,5 +113,5 @@ fence.fig <- ggplot(fence.df) +
 
 # Save
 ## -------------------------------------------------------------------------- ##
-ggsave(fence.fig, filename = "O:/Grenzen der Welt/Tagungen & Konferenzen/International boundaries in a globalizing world - Philadelphia 30.04.2020/figures/BorderFences_Avdan2019.tiff",
+ggsave(fence.fig, filename = "./figures/BorderWalls-Avdan2019.tiff",
        width = 11, height = 8, unit = "in", dpi = 300)
