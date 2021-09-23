@@ -24,14 +24,10 @@ cntry2010 <- colnames(visa.df$data[[2]])
 # Standardize
 visa.df$data[[3]] <- visa.df$data[[3]][
   rownames(visa.df$data[[3]]) %in% cntry2010, 
-  colnames(visa.df$data[[3]]) %in% cntry2010
-  ]
+  colnames(visa.df$data[[3]]) %in% cntry2010]
 
 # Create in- and outdegree
 ### ------------------------------------------------------------------------ ###
-# Notes: 
-# - Check treatment of NA
-# - in- and outdegree computation could also be done with the network module
 visa.df <- visa.df %>%
   mutate(sent_waivers = map(data, ~rowSums(.x, na.rm = TRUE)),
          received_waivers = map(data, ~colSums(.x, na.rm = TRUE)),
@@ -71,11 +67,15 @@ visa.stats.df <- visa.stats.df %>%
 visa.stats.df <- visa.stats.df %>%
   mutate(data = map(data, ~.x %>%
                       group_by(region) %>%
-                      mutate(region_mean_sent = mean(sent_waivers, na.rm = TRUE),
-                             region_mean_received = mean(received_waivers, na.rm = TRUE)) %>%
+                      mutate(region_mean_sent = mean(sent_waivers, 
+                                                     na.rm = TRUE),
+                             region_mean_received = mean(received_waivers, 
+                                                         na.rm = TRUE)) %>%
                       ungroup() %>%
-                      mutate(global_mean_sent = mean(sent_waivers, na.rm = TRUE),
-                             global_mean_received = mean(received_waivers,na.rm = TRUE))))
+                      mutate(global_mean_sent = mean(sent_waivers, 
+                                                     na.rm = TRUE),
+                             global_mean_received = mean(received_waivers, 
+                                                         na.rm = TRUE))))
 
 # Create variables for plotting
 ### ------------------------------------------------------------------------ ###
@@ -91,8 +91,7 @@ visa.stats.df <- visa.stats.df %>%
            group_by(interval) %>%
            count() %>%
            ungroup() %>%
-           mutate(cum_sum = cumsum(n)/sum(n))
-           ))
+           mutate(cum_sum = cumsum(n)/sum(n))))
 
 # Plot histogram and cumulative frequency distribution across years
 ### ------------------------------------------------------------------------ ###
