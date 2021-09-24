@@ -97,28 +97,32 @@ visa.stats.df <- visa.stats.df %>%
 ### ------------------------------------------------------------------------ ###
 visa.stats.df <- visa.stats.df %>%
   mutate(
+    x_axis_bar = c("Frequency", "", ""),
+    x_axis_line = c("Percentage", "", ""),
     # Barplot of degree distribution
     barplot =
-      map2(.x = plot_data, .y = year, ~ ggplot(.x) +
+      pmap(list(plot_data, x_axis_bar, year), ~ ggplot(..1) +
         geom_bar(aes(x = interval, y = n), stat = "identity") +
         scale_y_continuous(limits = c(0, 40)) +
         scale_x_discrete(drop = FALSE) +
-        labs(x = "", y = "", title = paste(.y)) +
+        labs(x = "", y = ..2, title = str_c("Histogram: Visa-free travel, ", ..3)) +
         theme_minimal() +
         theme(
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 45, hjust = 1))),
+          axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
+          axis.text.y = element_text(size = 12))),
     # Cumulative frequency distribution of degree
     lineplot =
-      map2(.x = plot_data, .y = year, ~ ggplot(.x) +
+      pmap(list(plot_data, x_axis_line, year), ~ ggplot(..1) +
         geom_line(aes(x = interval, y = cum_sum, group = 1)) +
         geom_area(aes(x = interval, y = cum_sum, group = 1),
           fill = "#252525", alpha = 0.4) +
         scale_x_discrete(drop = FALSE) +
         scale_y_continuous(labels = function(x) paste0(x * 100, "%")) +
-        labs(x = "", y = "", title = paste(.y)) +
+        labs(x = "", y = ..2, title = str_c("Cumulative frequency, ", ..3)) +
         theme_minimal() +
-        theme(axis.text.x = element_text(angle = 45, hjust = 1))),
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
+              axis.text.y = element_text(size = 12))),
     # Pointplot of received visas by regions
     received_pointplot = map2(.x = data, .y = year, ~ ggplot(.x, aes(
       x = factor(region, levels = rev(c(
@@ -154,8 +158,8 @@ visa.stats.df <- visa.stats.df %>%
       coord_flip() +
       scale_y_continuous(limits = c(0,165), oob = scales::squish) +
       labs(x = "", y = "Sent visa waivers", title = paste(.y)) +
-      theme_minimal())
-  )
+      theme_minimal())) %>%
+  select(-c(x_axis_bar, x_axis_line))
 
 # Use patchwork to arrange plots
 ### ------------------------------------------------------------------------ ###
@@ -172,6 +176,6 @@ visa.histogram.fig <- wrap_plots(plot.df, ncol = 3, nrow = 2, heights = c(3, 1))
 ### ------------------------------------------------------------------------ ###
 ggsave(
   plot = visa.histogram.fig, "./figures/histogram-visa.tiff", 
-  width = 16, height = 10, unit = "in",
+  width = 18, height = 10, unit = "in",
   dpi = 300
 )
