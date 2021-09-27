@@ -11,8 +11,19 @@
 if (!require("xfun")) install.packages("xfun")
 pkg_attach2("tidyverse", "rio", "countrycode", "patchwork", "grid", "statnet")
 
+# Theme (plotting)
+### ------------------------------------------------------------------------ ###
+theme_basic <- theme_minimal() +
+  theme(
+    panel.grid.minor.x = element_blank(),
+    panel.grid.major.x = element_blank(),
+    text = element_text(size = 14),
+    axis.ticks.x = element_line(size = .5),
+    axis.text = element_text(colour = "black", size = 14)
+  )
+
 # Load data
-### ------------------------------------------------------------------------###
+### ------------------------------------------------------------------------ ###
 visa.df <- import("./data/VisaNetworkData.RDS")
 
 # Standardized sample 
@@ -38,7 +49,7 @@ visa.df <- visa.df %>%
 
 # Unnest 
 ### ------------------------------------------------------------------------ ###
-visa.stats.df <- visa.df %>%
+visa_stats.df <- visa.df %>%
   select(-data, -network_data) %>%
   mutate(country = map(sent_waivers, ~names(.x))) %>%
   unnest(cols = c(year, sent_waivers, received_waivers, stats, country)) %>%
@@ -46,7 +57,7 @@ visa.stats.df <- visa.df %>%
 
 # Descriptive statistics
 ### ------------------------------------------------------------------------ ###
-visa.stats.df <- visa.stats.df %>%
+visa_stats.df <- visa.stats.df %>%
   mutate(top_10 = map(data, ~.x %>%
                         slice_max(received_waivers, n = 10)), # with_ties 
          bottom_10 = map(data, ~.x %>%
@@ -54,7 +65,7 @@ visa.stats.df <- visa.stats.df %>%
 
 # Add region identifier (from World Bank Indicators)
 ### ------------------------------------------------------------------------ ###
-visa.stats.df <- visa.stats.df %>%
+visa_stats.df <- visa.stats.df %>%
   mutate(data = map(data, ~.x %>%
                       mutate(
                         region = countrycode(
@@ -64,7 +75,7 @@ visa.stats.df <- visa.stats.df %>%
 
 # Variables grouped by region
 ### ------------------------------------------------------------------------ ###
-visa.stats.df <- visa.stats.df %>%
+visa_stats.df <- visa.stats.df %>%
   mutate(data = map(data, ~.x %>%
                       group_by(region) %>%
                       mutate(region_mean_sent = mean(sent_waivers, 
@@ -79,7 +90,7 @@ visa.stats.df <- visa.stats.df %>%
 
 # Create variables for plotting
 ### ------------------------------------------------------------------------ ###
-visa.stats.df <- visa.stats.df %>%
+visa_stats.df <- visa.stats.df %>%
   mutate(plot_data = map(data, ~.x %>%
                            mutate(
                              interval = cut(received_waivers, 
@@ -95,87 +106,89 @@ visa.stats.df <- visa.stats.df %>%
 
 # Plot histogram and cumulative frequency distribution across years
 ### ------------------------------------------------------------------------ ###
-visa.stats.df <- visa.stats.df %>%
+visa_stats.df <- visa.stats.df %>%
   mutate(
-    x_axis_bar = c("Frequency", "", ""),
-    x_axis_line = c("Percentage", "", ""),
+    # Individual annotations
+    x_axis = c("", "Visa-free travel", ""),
+    y_axis_bar = c("Frequency", "", ""),
+    y_axis_line = c("Percentage", "", ""),
+    y_axis_point = c("Region", "", ""),
+    
     # Barplot of degree distribution
     barplot =
-      pmap(list(plot_data, x_axis_bar, year), ~ ggplot(..1) +
+      pmap(list(plot_data, y_axis_bar, year), ~ ggplot(..1) +
         geom_bar(aes(x = interval, y = n), stat = "identity") +
         scale_y_continuous(limits = c(0, 40)) +
         scale_x_discrete(drop = FALSE) +
         labs(x = "", y = ..2, title = str_c("Histogram: Visa-free travel, ", ..3)) +
-        theme_minimal() +
+        theme_basic +
         theme(
           axis.title.x = element_blank(),
-          axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
-          axis.text.y = element_text(size = 12))),
+          axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 14))),
+    
     # Cumulative frequency distribution of degree
     lineplot =
-      pmap(list(plot_data, x_axis_line, year), ~ ggplot(..1) +
+      pmap(list(plot_data, x_axis, y_axis_line, year), ~ ggplot(..1) +
         geom_line(aes(x = interval, y = cum_sum, group = 1)) +
         geom_area(aes(x = interval, y = cum_sum, group = 1),
           fill = "#252525", alpha = 0.4) +
         scale_x_discrete(drop = FALSE) +
         scale_y_continuous(labels = function(x) paste0(x * 100, "%")) +
-        labs(x = "", y = ..2, title = str_c("Cumulative frequency, ", ..3)) +
-        theme_minimal() +
-        theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 12),
-              axis.text.y = element_text(size = 12))),
+        labs(x = ..2, y = ..3, title = str_c("Cumulative frequency, ", ..4)) +
+        theme_basic +
+        theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 14))),
+    
     # Pointplot of received visas by regions
-    received_pointplot = map2(.x = data, .y = year, ~ ggplot(.x, aes(
+    received_pointplot = pmap(list(data, x_axis, y_axis_point, year), ~ggplot(..1, aes(
       x = factor(region, levels = rev(c(
         "North America", "Europe & Central Asia", "Latin America & Caribbean",
         "East Asia & Pacific", "Middle East & North Africa", "Sub-Saharan Africa",
         "South Asia"))),
       y = received_waivers)) +
       geom_jitter(size = 2, alpha = 0.25, width = 0.2) +
-      geom_point(aes(x = region, y = region_mean_received),
-        size = 5, shape = 15, alpha = 0.05) +
+      geom_point(data = ..1 %>% 
+                   distinct(region, region_mean_received), 
+                 aes(x = region, y = region_mean_received),
+        size = 5, shape = 15, alpha = 0.75) +
       geom_hline(aes(yintercept = global_mean_received),
         color = "black",
         size = 0.6, 
         linetype = "dashed") +
       coord_flip() +
       ylim(0, 105) +
-      labs(x = "", y = "Receives visa waivers", title = paste(.y)) +
-      theme_minimal()),
-    # Pointplot of sent visas by regions
-    sent_pointplot = map2(.x = data, .y = year, ~ ggplot(.x, aes(
-      x = factor(region, levels = rev(c(
-        "North America", "Europe & Central Asia", "Latin America & Caribbean",
-        "East Asia & Pacific", "Middle East & North Africa", "Sub-Saharan Africa",
-        "South Asia"))),
-      y = sent_waivers)) +
-      geom_jitter(size = 2, alpha = 0.25, width = 0.2) +
-      geom_point(aes(x = region, y = region_mean_sent),
-        size = 5,
-        shape = 15, alpha = 0.05) +
-      geom_hline(aes(yintercept = global_mean_sent),
-        color = "black",
-        size = 0.6, linetype = "dashed") +
-      coord_flip() +
-      scale_y_continuous(limits = c(0,165), oob = scales::squish) +
-      labs(x = "", y = "Sent visa waivers", title = paste(.y)) +
-      theme_minimal())) %>%
-  select(-c(x_axis_bar, x_axis_line))
+      labs(x = ..3, y = ..2, title = str_c("Visa-free travel, "..4)) +
+      theme_basic)) %>%
+  select(-c(x_axis, y_axis_bar, y_axis_line, y_axis_point))
 
 # Use patchwork to arrange plots
 ### ------------------------------------------------------------------------ ###
-plot.df <- visa.stats.df %>%
+# (A) Histogram and cumulative frequency
+hist_plot.df <- visa_stats.df %>%
   select("barplot", "lineplot", "year") %>%
   pivot_longer(c("barplot", "lineplot"), names_to = "type", values_to = "plot") %>%
   arrange(type, year) %>%
   pull(plot) 
 
 # Wrap plots
-visa.histogram.fig <- wrap_plots(plot.df, ncol = 3, nrow = 2, heights = c(3, 1))
+visa_histogram.fig <- wrap_plots(hist_plot.df, ncol = 3, nrow = 2, heights = c(3, 1))
+
+# (B) Visa freedom by region
+region_plot.df <- visa_stats.df %>%
+  pull(received_pointplot)
+
+# Wrap plots
+region.fig <- wrap_plots(region_plot.df, nrow = 1)
 
 # Export
 ### ------------------------------------------------------------------------ ###
 ggsave(
-  plot = visa.histogram.fig, "./figures/histogram-visa.tiff", 
+  plot = visa_histogram.fig, "./figures/histogram-visa.tiff", 
+  width = 18, height = 10, unit = "in",
+  dpi = 300
+)
+
+ggsave(
+  plot = region.fig, "./figures/region-visa.tiff", 
   width = 18, height = 10, unit = "in",
   dpi = 300
 )
