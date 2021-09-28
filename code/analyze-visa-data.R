@@ -57,7 +57,7 @@ visa_stats.df <- visa.df %>%
 
 # Descriptive statistics
 ### ------------------------------------------------------------------------ ###
-visa_stats.df <- visa.stats.df %>%
+visa_stats.df <- visa_stats.df %>%
   mutate(top_10 = map(data, ~.x %>%
                         slice_max(received_waivers, n = 10)), # with_ties 
          bottom_10 = map(data, ~.x %>%
@@ -65,7 +65,7 @@ visa_stats.df <- visa.stats.df %>%
 
 # Add region identifier (from World Bank Indicators)
 ### ------------------------------------------------------------------------ ###
-visa_stats.df <- visa.stats.df %>%
+visa_stats.df <- visa_stats.df %>%
   mutate(data = map(data, ~.x %>%
                       mutate(
                         region = countrycode(
@@ -75,7 +75,7 @@ visa_stats.df <- visa.stats.df %>%
 
 # Variables grouped by region
 ### ------------------------------------------------------------------------ ###
-visa_stats.df <- visa.stats.df %>%
+visa_stats.df <- visa_stats.df %>%
   mutate(data = map(data, ~.x %>%
                       group_by(region) %>%
                       mutate(region_mean_sent = mean(sent_waivers, 
@@ -90,7 +90,7 @@ visa_stats.df <- visa.stats.df %>%
 
 # Create variables for plotting
 ### ------------------------------------------------------------------------ ###
-visa_stats.df <- visa.stats.df %>%
+visa_stats.df <- visa_stats.df %>%
   mutate(plot_data = map(data, ~.x %>%
                            mutate(
                              interval = cut(received_waivers, 
@@ -98,15 +98,17 @@ visa_stats.df <- visa.stats.df %>%
                                             right = FALSE,
                                             labels = 
                                               c("0", paste0(seq(1, 101, 5), "-", 
-                                                            seq(5, 106, 5))))) %>%
-           group_by(interval) %>%
-           count() %>%
-           ungroup() %>%
-           mutate(cum_sum = cumsum(n)/sum(n))))
+                                                            seq(5, 106, 5)))))),
+         mode = map_chr(plot_data, ~modeest::mfv(as.character(.x$interval))),
+         plot_data = map(plot_data, ~.x %>%
+                           group_by(interval) %>%
+                           count() %>%
+                           ungroup() %>%
+                           mutate(cum_sum = cumsum(n)/sum(n))))
 
 # Plot histogram and cumulative frequency distribution across years
 ### ------------------------------------------------------------------------ ###
-visa_stats.df <- visa.stats.df %>%
+visa_stats.df <- visa_stats.df %>%
   mutate(
     # Individual annotations
     x_axis = c("", "Visa-free travel", ""),
