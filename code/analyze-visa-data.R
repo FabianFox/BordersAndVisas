@@ -158,7 +158,7 @@ visa_stats.df <- visa_stats.df %>%
         linetype = "dashed") +
       coord_flip() +
       ylim(0, 105) +
-      labs(x = ..3, y = ..2, title = str_c("Visa-free travel, "..4)) +
+      labs(x = ..3, y = ..2, title = str_c("Visa-free travel, ", ..4)) +
       theme_basic)) %>%
   select(-c(x_axis, y_axis_bar, y_axis_line, y_axis_point))
 
