@@ -88,6 +88,47 @@ visa_stats.df <- visa_stats.df %>%
                              global_mean_received = mean(received_waivers, 
                                                          na.rm = TRUE))))
 
+# Countries that lost/won most visa waivers
+### ------------------------------------------------------------------------ ###
+# Create df
+visa_long.df <- visa.df %>%
+  select(year, received_waivers, sent_waivers) %>%
+  mutate(
+    received_waivers = map(received_waivers, ~enframe(
+      .x,
+      name = "country", 
+      value = "received_waivers")),
+    sent_waivers = map(sent_waivers, ~enframe(
+      .x,
+      name = "country", 
+      value = "sent_waivers")),
+    visa = map2(.x = received_waivers, .y = sent_waivers, ~left_join(
+      x = .x, 
+      y = .y, 
+      by = "country"))) %>%
+  select(-c("sent_waivers", "received_waivers")) %>%
+  unnest(c(visa)) %>%
+  pivot_wider(id_cols = c(country, year), names_from = year, 
+              values_from = c(received_waivers, sent_waivers)) 
+
+# Most won/lost 1969:2010
+visa_long.df %>%
+  mutate(diff = received_waivers_2010 - received_waivers_1969) %>%
+  filter(!is.na(diff)) %>%
+  arrange(desc(diff)) %>%
+  slice(1:5, n():(n()-5)) %>%
+  select(country, received_waivers_1969, received_waivers_2010, 
+         received_waivers_2020) %>%
+  mutate(position = factor(ifelse(row_number() == 1:5, "Winner", "Loser"), levels = c("Winner", "Loser"))) %>%
+  pivot_longer(cols = 2:4, names_to = "variable", values_to = "number") %>%
+  mutate(year = str_extract(variable, "[:digit:]{4}"),
+         variable = str_replace(variable, "_[:digit:]{4}", "")) %>%
+  filter(variable == "received_waivers") %>%
+  ggplot(aes(x = year, y = number, colour = country, group = country)) +
+  geom_point() +
+  geom_path() +
+  facet_wrap(~position, ncol = 1)
+
 # Create variables for plotting
 ### ------------------------------------------------------------------------ ###
 visa_stats.df <- visa_stats.df %>%
