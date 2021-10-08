@@ -60,7 +60,7 @@ theme.basic <- theme_minimal() +
     text = element_text(size = 14),
     axis.ticks.x = element_line(size = .5),
     axis.text.x = element_text(angle = 45, hjust = 1),
-    axis.text = element_text(colour = "black", size = 12)
+    axis.text = element_text(size = 12)
   )
 
 # Exploratory analysis of indicator
