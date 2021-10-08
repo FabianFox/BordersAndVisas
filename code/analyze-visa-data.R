@@ -113,7 +113,7 @@ visa_long.df <- visa.df %>%
 
 # Most won/lost 1969:2010
 visa_long.df %>%
-  mutate(diff = received_waivers_2010 - received_waivers_1969) %>%
+  mutate(diff = received_waivers_1969 - received_waivers_2010) %>%
   filter(!is.na(diff)) %>%
   arrange(desc(diff)) %>%
   slice(1:5, n():(n()-5)) %>%
@@ -127,7 +127,8 @@ visa_long.df %>%
   ggplot(aes(x = year, y = number, colour = country, group = country)) +
   geom_point() +
   geom_path() +
-  facet_wrap(~position, ncol = 1)
+  facet_wrap(~position, ncol = 1) +
+  theme_basic
 
 # Create variables for plotting
 ### ------------------------------------------------------------------------ ###
