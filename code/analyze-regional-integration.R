@@ -69,7 +69,7 @@ internal_openness_fun <- function(x){
     mutate(across(where(is.factor), as.character)) %>%
     filter(from != to) %>%
     filter(across(c(from, to), ~ .x %in% integration.df$country[integration.df$project_name == x])) %>%
-    mutate(n = length(unique(to))) %>%
+    mutate(n = length(unique(to)) - 1) %>%
     group_by(from) %>%
     mutate(internal_openness = sum(value) / n * 100) %>%
     ungroup() %>%
@@ -85,8 +85,26 @@ integration_stats.df <- integration.df %>%
   mutate(external_openness = map_dbl(project_name, ~unlist(external_openness_fun(.x))),
          internal_openness = map_dbl(project_name, ~unlist(internal_openness_fun(.x))))
 
- 
+# Make data longer for plotting
+integration_plot.df <- integration_stats.df %>%
+  pivot_longer(cols = c(external_openness, internal_openness), names_to = "measure") %>%
+  arrange(desc(measure), value) %>%
+  mutate(project_name = factor(project_name, levels = unique(project_name)),
+         measure = str_to_title(str_replace(measure, "_", " ")))
 
+# Plot
+### ------------------------------------------------------------------------ ###
+integration_openness.fig <- ggplot(integration_plot.df, aes(x = project_name, 
+                                                            value, y = value,
+                                                            fill = measure)) +
+  geom_bar(position = "dodge", stat = "identity") +
+  coord_flip() +
+  scale_fill_grey(start = 0.8, end = 0.2) +
+  scale_y_continuous(labels = function(x) str_c(x, "%")) + 
+  labs(x = "", y = "Percentage", fill = "") +
+  theme_basic +
+  theme(legend.text = element_text(size = 14))
 
-
-
+# Export
+### ------------------------------------------------------------------------ ###
+ggsave(plot = integration_openness.fig, filename = "./figures/regional-integration-openness.tiff")
