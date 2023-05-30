@@ -3,12 +3,12 @@
 # Load/install pkgs
 ## -------------------------------------------------------------------------- ##
 if(!require("xfun")) install.packages("xfun")
-pkg_attach2("tidyverse", "rio", "here", "lemon", "janitor", "countrycode")
+pkg_attach2("tidyverse", "rio", "here", "lemon", "janitor", "countrycode", "Cairo")
 
 # Load: Border Infrastructure Data
 ## -------------------------------------------------------------------------- ##
 # Indicator
-indicator.df <- import("Y:\\Grenzen der Welt\\Grenzdossiers\\Typologie\\BorderTypology.xlsx",
+indicator.df <- import("./data/BorderTypology.xlsx",
                        sheet = 1, na = "NA") %>%
   as_tibble() %>%
   select(1:3, 16) %>%
@@ -151,4 +151,11 @@ ggsave(
   plot = ind_perc_region.fig, "./figures/Fig1 - Typology By Region.tiff", 
   width = 10, height = 8, unit = "in",
   dpi = 300
+)
+
+# Cairo pdf
+ggsave(
+  ind_perc_region.fig, filename = "./figures/Figure2_Distribution-of-various-border-infrastructure-by-continent.pdf", 
+  width = 10, height = 8, unit = "in",
+  dpi = 300, device = cairo_pdf
 )

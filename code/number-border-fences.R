@@ -116,5 +116,6 @@ fence.fig <- ggplot(fence.df) +
 ggsave(fence.fig, filename = "./figures/BorderWalls-Avdan2019.tiff",
        width = 11, height = 8, unit = "in", dpi = 300)
 
+# Cairo pdf
 ggsave(fence.fig, filename = "./figures/Figure1_The-increase-in-fortified-borders.pdf",
        width = 11, height = 8, unit = "in", dpi = 300, device = cairo_pdf)

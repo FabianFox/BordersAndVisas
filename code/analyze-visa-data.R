@@ -9,7 +9,7 @@
 # Load/install packages
 ### ------------------------------------------------------------------------ ###
 if (!require("xfun")) install.packages("xfun")
-pkg_attach2("tidyverse", "rio", "countrycode", "patchwork", "grid", "statnet")
+pkg_attach2("tidyverse", "rio", "countrycode", "patchwork", "grid", "statnet", "Cairo")
 
 # Theme (plotting)
 ### ------------------------------------------------------------------------ ###
@@ -108,7 +108,7 @@ visa_long.df <- visa.df %>%
       by = "country"))) %>%
   select(-c("sent_waivers", "received_waivers")) %>%
   unnest(c(visa)) %>%
-  pivot_wider(id_cols = c(country, year), names_from = year, 
+  pivot_wider(names_from = year, 
               values_from = c(received_waivers, sent_waivers)) 
 
 # Most won/lost 1969:2010
@@ -232,7 +232,19 @@ ggsave(
 )
 
 ggsave(
+  plot = visa_histogram.fig, filename = "./figures/Figure3_Histogram-and-cumulative-frequency-of-visa-waivers_1969_2010_and_2020.pdf", 
+  width = 18, height = 10, unit = "in",
+  dpi = 300, device = cairo_pdf
+)
+
+ggsave(
   plot = region.fig, "./figures/region-visa.tiff", 
   width = 18, height = 10, unit = "in",
   dpi = 300
+)
+
+ggsave(
+  plot = region.fig, filename = "./figures/Figure4_Visa-freedom-at-the-regional-level_1969_2010_and_2020.pdf", 
+  width = 18, height = 10, unit = "in",
+  dpi = 300, device = cairo_pdf
 )

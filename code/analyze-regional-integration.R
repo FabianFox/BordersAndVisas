@@ -11,7 +11,7 @@
 # Load/install packages
 ### ------------------------------------------------------------------------ ###
 if (!require("xfun")) install.packages("xfun")
-pkg_attach2("tidyverse", "rio", "countrycode", "patchwork", "grid", "statnet")
+pkg_attach2("tidyverse", "rio", "countrycode", "patchwork", "grid", "statnet", "Cairo")
 
 # Theme (plotting)
 ### ------------------------------------------------------------------------ ###
@@ -108,3 +108,6 @@ integration_openness.fig <- ggplot(integration_plot.df, aes(x = project_name,
 # Export
 ### ------------------------------------------------------------------------ ###
 ggsave(plot = integration_openness.fig, filename = "./figures/regional-integration-openness.tiff")
+
+ggsave(plot = integration_openness.fig, filename = "./figures/Figure5_Internal-and-external-openness-of-regional-integration-projects-2020.pdf",
+       width = 11, height = 8, unit = "in", dpi = 300, device = cairo_pdf)
